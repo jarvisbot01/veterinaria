@@ -1,3 +1,4 @@
+using System.Reflection;
 using Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
@@ -8,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddJwt(builder.Configuration);
 builder.Services.AddDbContext<PetShopContext>(options =>
 {
