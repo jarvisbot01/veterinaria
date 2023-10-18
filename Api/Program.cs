@@ -11,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
 builder.Services.ConfigureRateLimiting();
+builder.Services.ConfigureCors();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddJwt(builder.Configuration);
 builder.Services.AddDbContext<PetShopContext>(options =>
