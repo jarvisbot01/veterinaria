@@ -2,6 +2,7 @@ using System.Text;
 using Api.Helpers;
 using Api.Services;
 using Application.UnitOfWork;
+using AspNetCoreRateLimit;
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -47,6 +48,29 @@ namespace Api.Extensions
                         )
                     };
                 });
+        }
+
+        public static void ConfigureRateLimiting(this IServiceCollection services)
+        {
+            services.AddMemoryCache();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddInMemoryRateLimiting();
+            services.Configure<IpRateLimitOptions>(options =>
+            {
+                options.EnableEndpointRateLimiting = true;
+                options.StackBlockedRequests = true;
+                options.HttpStatusCode = 429;
+                options.RealIpHeader = "X-real-ip";
+                options.GeneralRules = new List<RateLimitRule>
+                {
+                    new RateLimitRule
+                    {
+                        Endpoint = "*",
+                        Period = "10s",
+                        Limit = 5
+                    }
+                };
+            });
         }
     }
 }

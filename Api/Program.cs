@@ -1,5 +1,6 @@
 using System.Reflection;
 using Api.Extensions;
+using AspNetCoreRateLimit;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
@@ -9,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
+builder.Services.ConfigureRateLimiting();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddJwt(builder.Configuration);
 builder.Services.AddDbContext<PetShopContext>(options =>
@@ -40,6 +42,8 @@ using (var scope = app.Services.CreateScope())
         _logger.LogError(ex, "An error occurred during migration.");
     }
 }
+
+app.UseIpRateLimiting();
 
 app.UseAuthorization();
 
