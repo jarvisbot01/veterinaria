@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class MovementTypeController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,36 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<MovementTypeDto>>> Get()
         {
             var movementType = await _unitofwork.MovementTypes.GetAllAsync();
             return _mapper.Map<List<MovementTypeDto>>(movementType);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<MovementTypeDto>>> Get11(
+            [FromQuery] Params MovementTypeParams
+        )
+        {
+            var movementType = await _unitofwork.MovementTypes.GetAllAsync(
+                MovementTypeParams.PageIndex,
+                MovementTypeParams.PageSize,
+                MovementTypeParams.Search
+            );
+            var listMovementTypeDto = _mapper.Map<List<MovementTypeDto>>(movementType.records);
+            return new Pager<MovementTypeDto>(
+                listMovementTypeDto,
+                movementType.totalRecords,
+                MovementTypeParams.PageIndex,
+                MovementTypeParams.PageSize,
+                MovementTypeParams.Search
+            );
         }
 
         [HttpGet("{id}")]

@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class PetController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,34 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<PetDto>>> Get()
         {
             var pet = await _unitofwork.Pets.GetAllAsync();
             return _mapper.Map<List<PetDto>>(pet);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<PetDto>>> GetPaged([FromQuery] Params PetParams)
+        {
+            var Pets = await _unitofwork.Pets.GetAllAsync(
+                PetParams.PageIndex,
+                PetParams.PageSize,
+                PetParams.Search
+            );
+            var listPetDto = _mapper.Map<List<PetDto>>(Pets.records);
+            return new Pager<PetDto>(
+                listPetDto,
+                Pets.totalRecords,
+                PetParams.PageIndex,
+                PetParams.PageSize,
+                PetParams.Search
+            );
         }
 
         [HttpGet("{id}")]

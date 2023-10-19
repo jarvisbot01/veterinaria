@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class SpeciesController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,36 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<SpeciesDto>>> Get()
         {
             var species = await _unitofwork.Species.GetAllAsync();
             return _mapper.Map<List<SpeciesDto>>(species);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<SpeciesDto>>> GetPaged(
+            [FromQuery] Params SpeciesParams
+        )
+        {
+            var Species = await _unitofwork.Species.GetAllAsync(
+                SpeciesParams.PageIndex,
+                SpeciesParams.PageSize,
+                SpeciesParams.Search
+            );
+            var listSpeciesDto = _mapper.Map<List<SpeciesDto>>(Species.records);
+            return new Pager<SpeciesDto>(
+                listSpeciesDto,
+                Species.totalRecords,
+                SpeciesParams.PageIndex,
+                SpeciesParams.PageSize,
+                SpeciesParams.Search
+            );
         }
 
         [HttpGet("{id}")]

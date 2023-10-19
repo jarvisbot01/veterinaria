@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class LaboratoryController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,36 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<LaboratoryDto>>> Get()
         {
             var laboratory = await _unitofwork.Laboratories.GetAllAsync();
             return _mapper.Map<List<LaboratoryDto>>(laboratory);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<LaboratoryDto>>> Get11(
+            [FromQuery] Params laboratoryParams
+        )
+        {
+            var laboratories = await _unitofwork.Laboratories.GetAllAsync(
+                laboratoryParams.PageIndex,
+                laboratoryParams.PageSize,
+                laboratoryParams.Search
+            );
+            var listLaboratoryDto = _mapper.Map<List<LaboratoryDto>>(laboratories.records);
+            return new Pager<LaboratoryDto>(
+                listLaboratoryDto,
+                laboratories.totalRecords,
+                laboratoryParams.PageIndex,
+                laboratoryParams.PageSize,
+                laboratoryParams.Search
+            );
         }
 
         [HttpGet("{id}")]

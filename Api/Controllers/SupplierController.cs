@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class SupplierController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,34 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<SupplierDto>>> Get()
         {
             var supplier = await _unitofwork.Suppliers.GetAllAsync();
             return _mapper.Map<List<SupplierDto>>(supplier);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<SupplierDto>>> Get11([FromQuery] Params SupplierParams)
+        {
+            var Suppliers = await _unitofwork.Suppliers.GetAllAsync(
+                SupplierParams.PageIndex,
+                SupplierParams.PageSize,
+                SupplierParams.Search
+            );
+            var listSupplierDto = _mapper.Map<List<SupplierDto>>(Suppliers.records);
+            return new Pager<SupplierDto>(
+                listSupplierDto,
+                Suppliers.totalRecords,
+                SupplierParams.PageIndex,
+                SupplierParams.PageSize,
+                SupplierParams.Search
+            );
         }
 
         [HttpGet("{id}")]

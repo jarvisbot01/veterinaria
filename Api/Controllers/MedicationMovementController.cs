@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class MedicationMovementController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,38 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<MedicationMovementDto>>> Get()
         {
             var medicationMovement = await _unitofwork.MedicationMovements.GetAllAsync();
             return _mapper.Map<List<MedicationMovementDto>>(medicationMovement);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<MedicationMovementDto>>> Get11(
+            [FromQuery] Params MedicationMovementParams
+        )
+        {
+            var MedicationMovements = await _unitofwork.MedicationMovements.GetAllAsync(
+                MedicationMovementParams.PageIndex,
+                MedicationMovementParams.PageSize,
+                MedicationMovementParams.Search
+            );
+            var listMedicationMovementDto = _mapper.Map<List<MedicationMovementDto>>(
+                MedicationMovements.records
+            );
+            return new Pager<MedicationMovementDto>(
+                listMedicationMovementDto,
+                MedicationMovements.totalRecords,
+                MedicationMovementParams.PageIndex,
+                MedicationMovementParams.PageSize,
+                MedicationMovementParams.Search
+            );
         }
 
         [HttpGet("{id}")]

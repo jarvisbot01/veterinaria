@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class MedicalTreatmentController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,38 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<MedicalTreatmentDto>>> Get()
         {
             var medicalTreatment = await _unitofwork.MedicalTreatments.GetAllAsync();
             return _mapper.Map<List<MedicalTreatmentDto>>(medicalTreatment);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<MedicalTreatmentDto>>> GetPaged(
+            [FromQuery] Params MedicalTreatmentParams
+        )
+        {
+            var MedicalTreatments = await _unitofwork.MedicalTreatments.GetAllAsync(
+                MedicalTreatmentParams.PageIndex,
+                MedicalTreatmentParams.PageSize,
+                MedicalTreatmentParams.Search
+            );
+            var listMedicalTreatmentDto = _mapper.Map<List<MedicalTreatmentDto>>(
+                MedicalTreatments.records
+            );
+            return new Pager<MedicalTreatmentDto>(
+                listMedicalTreatmentDto,
+                MedicalTreatments.totalRecords,
+                MedicalTreatmentParams.PageIndex,
+                MedicalTreatmentParams.PageSize,
+                MedicalTreatmentParams.Search
+            );
         }
 
         [HttpGet("{id}")]

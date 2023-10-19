@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class MovementDetailController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,38 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<MovementDetailDto>>> Get()
         {
             var movementDetail = await _unitofwork.MovementDetails.GetAllAsync();
             return _mapper.Map<List<MovementDetailDto>>(movementDetail);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<MovementDetailDto>>> GetPaged(
+            [FromQuery] Params MovementDetailParams
+        )
+        {
+            var MovementDetails = await _unitofwork.MovementDetails.GetAllAsync(
+                MovementDetailParams.PageIndex,
+                MovementDetailParams.PageSize,
+                MovementDetailParams.Search
+            );
+            var listMovementDetailDto = _mapper.Map<List<MovementDetailDto>>(
+                MovementDetails.records
+            );
+            return new Pager<MovementDetailDto>(
+                listMovementDetailDto,
+                MovementDetails.totalRecords,
+                MovementDetailParams.PageIndex,
+                MovementDetailParams.PageSize,
+                MovementDetailParams.Search
+            );
         }
 
         [HttpGet("{id}")]

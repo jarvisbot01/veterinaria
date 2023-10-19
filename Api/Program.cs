@@ -1,6 +1,8 @@
-using System.Reflection;using Api.Extensions;
+using System.Reflection;
+using Api.Extensions;
 using AspNetCoreRateLimit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Persistence;
 using Serilog;
 
@@ -14,10 +16,43 @@ builder.Logging.AddSerilog(logger);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Petshop", Version = "v1" });
+    c.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please insert token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "bearer"
+        }
+    );
+    c.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] { }
+            }
+        }
+    );
+});
 builder.Services.AddApplicationServices();
 builder.Services.ConfigureRateLimiting();
 builder.Services.ConfigureCors();
+builder.Services.ConfigureApiVersioning();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddJwt(builder.Configuration);
 builder.Services.AddDbContext<PetShopContext>(options =>

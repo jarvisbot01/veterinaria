@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class BreedController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,34 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<BreedDto>>> Get()
         {
             var breed = await _unitofwork.Breeds.GetAllAsync();
             return _mapper.Map<List<BreedDto>>(breed);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<BreedDto>>> GetPaged([FromQuery] Params breedParams)
+        {
+            var breeds = await _unitofwork.Breeds.GetAllAsync(
+                breedParams.PageIndex,
+                breedParams.PageSize,
+                breedParams.Search
+            );
+            var listBreedDto = _mapper.Map<List<BreedDto>>(breeds.records);
+            return new Pager<BreedDto>(
+                listBreedDto,
+                breeds.totalRecords,
+                breedParams.PageIndex,
+                breedParams.PageSize,
+                breedParams.Search
+            );
         }
 
         [HttpGet("{id}")]

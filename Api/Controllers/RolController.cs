@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class RolController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,34 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<RolDto>>> Get()
         {
             var rol = await _unitofwork.Roles.GetAllAsync();
             return _mapper.Map<List<RolDto>>(rol);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<RolDto>>> GetPaged([FromQuery] Params RolParams)
+        {
+            var Rols = await _unitofwork.Roles.GetAllAsync(
+                RolParams.PageIndex,
+                RolParams.PageSize,
+                RolParams.Search
+            );
+            var listRolDto = _mapper.Map<List<RolDto>>(Rols.records);
+            return new Pager<RolDto>(
+                listRolDto,
+                Rols.totalRecords,
+                RolParams.PageIndex,
+                RolParams.PageSize,
+                RolParams.Search
+            );
         }
 
         [HttpGet("{id}")]

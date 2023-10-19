@@ -1,4 +1,5 @@
 using Api.Dtos;
+using Api.Helpers;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -7,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "employee")]
     public class AppointmentController : BaseApiController
     {
         private readonly IUnitOfWork _unitofwork;
@@ -19,13 +23,36 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Employee")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> Get()
         {
             var Appointment = await _unitofwork.Appointments.GetAllAsync();
             return _mapper.Map<List<AppointmentDto>>(Appointment);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("1.1")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<Pager<AppointmentDto>>> GetPaged(
+            [FromQuery] Params appointmentParams
+        )
+        {
+            var appointments = await _unitofwork.Appointments.GetAllAsync(
+                appointmentParams.PageIndex,
+                appointmentParams.PageSize,
+                appointmentParams.Search
+            );
+            var listAppointmentDto = _mapper.Map<List<AppointmentDto>>(appointments.records);
+            return new Pager<AppointmentDto>(
+                listAppointmentDto,
+                appointments.totalRecords,
+                appointmentParams.PageIndex,
+                appointmentParams.PageSize,
+                appointmentParams.Search
+            );
         }
 
         [HttpGet("{id}")]
