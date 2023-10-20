@@ -64,5 +64,25 @@ namespace Application.Repository
             ).ToListAsync();
             return pet;
         }
+
+        public async Task<object> Consulta3B()
+        {
+            var consulta =
+                from e in _context.Appointments
+                join v in _context.Vets on e.VetId equals v.Id
+                select new
+                {
+                    vet = v.Name,
+                    pets = (
+                        from a in _context.Appointments
+                        join m in _context.Pets on a.PetId equals m.Id
+                        where a.VetId == v.Id
+                        select new { Name = m.Name, Birthdate = m.Birthdate, }
+                    ).ToList()
+                };
+
+            var result = await consulta.ToListAsync();
+            return result;
+        }
     }
 }

@@ -77,6 +77,14 @@ namespace Api.Controllers
             return Ok(pets);
         }
 
+        [HttpGet("consulta3B")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<object>> Consulta3B()
+        {
+            var result = await _unitofwork.Pets.Consulta3B();
+            return Ok(result);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
