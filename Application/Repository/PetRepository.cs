@@ -84,5 +84,19 @@ namespace Application.Repository
             var result = await consulta.ToListAsync();
             return result;
         }
+
+        public async Task<object> Consulta6B()
+        {
+            var query =
+                from r in _context.Breeds
+                select new
+                {
+                    Name = r.Name,
+                    Quantity = _context.Pets.Count(m => m.BreedId == r.Id)
+                };
+
+            var result = await query.ToListAsync();
+            return result;
+        }
     }
 }
