@@ -113,5 +113,13 @@ namespace Api.Controllers
             await _unitofwork.SaveAsync();
             return NoContent();
         }
+
+        [HttpGet("consulta5B")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<object>> Consulta5B()
+        {
+            var result = await _unitofwork.Owners.Consulta5B();
+            return Ok(result);
+        }
     }
 }
