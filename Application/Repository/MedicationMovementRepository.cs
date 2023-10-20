@@ -49,5 +49,21 @@ namespace Application.Repository
 
             return (totalRecords, records);
         }
+
+        public async Task<object> Consulta2B()
+        {
+            var Movimiento = await (
+                from d in _context.MovementDetails
+                join m in _context.MedicationMovements on d.MedicationMovementId equals m.Id
+
+                select new
+                {
+                    Id = m.Id,
+                    MovementType = m.MovementType.Description,
+                    Total = Math.Round(d.Price * d.Quantity, 2),
+                }
+            ).ToListAsync();
+            return Movimiento;
+        }
     }
 }

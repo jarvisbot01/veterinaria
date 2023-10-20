@@ -71,6 +71,16 @@ namespace Api.Controllers
             return _mapper.Map<MedicationMovementDto>(medicationMovement);
         }
 
+        [HttpGet("consulta2B")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<object>> Consulta2B()
+        {
+            var result = await _unitofwork.MedicationMovements.Consulta2B();
+            return Ok(result);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
