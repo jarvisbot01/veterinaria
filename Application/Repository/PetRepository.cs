@@ -43,5 +43,26 @@ namespace Application.Repository
             var records = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return (totalRecords, records);
         }
+
+        public async Task<IEnumerable<Pet>> Consulta1B()
+        {
+            var pet = await (
+                from m in _context.Pets
+                join r in _context.Breeds on m.BreedId equals r.Id
+                select new Pet
+                {
+                    Name = m.Name,
+                    Birthdate = m.Birthdate,
+                    BreedId = m.BreedId,
+                    Breed = new Breed
+                    {
+                        Name = r.Name,
+                        SpeciesId = r.SpeciesId,
+                        Species = new Species { Name = r.Species.Name }
+                    }
+                }
+            ).ToListAsync();
+            return pet;
+        }
     }
 }

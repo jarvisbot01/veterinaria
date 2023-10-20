@@ -67,6 +67,16 @@ namespace Api.Controllers
             return _mapper.Map<PetDto>(pet);
         }
 
+        [HttpGet("consulta1B")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<Pet>>> Consulta1B()
+        {
+            var pets = await _unitofwork.Pets.Consulta1B();
+            return Ok(pets);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
