@@ -67,6 +67,14 @@ namespace Api.Controllers
             return _mapper.Map<SupplierDto>(supplier);
         }
 
+        [HttpGet("consulta4B")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<object>> Consulta4B()
+        {
+            var result = await _unitofwork.Suppliers.Consulta4B();
+            return Ok(result);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

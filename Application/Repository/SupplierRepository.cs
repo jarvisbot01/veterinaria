@@ -43,5 +43,25 @@ namespace Application.Repository
             var records = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return (totalRecords, records);
         }
+
+        public async Task<object> Consulta4B()
+        {
+            var query =
+                from m in _context.Medications
+                select new
+                {
+                    Name = m.Name,
+                    Suppliers = (
+                        from mp in _context.MedicationSuppliers
+                        join me in _context.Medications on mp.MedicationId equals me.Id
+                        join p in _context.Suppliers on mp.SupplierId equals p.Id
+                        where m.Id == mp.MedicationId
+                        select new { Name = p.Name, }
+                    ).ToList()
+                };
+
+            var result = await query.ToListAsync();
+            return result;
+        }
     }
 }
